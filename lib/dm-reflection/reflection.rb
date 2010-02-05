@@ -20,18 +20,18 @@ module DataMapper
     def self.make_model_string(desc, repo)
       model_description = []
       storage_name = desc['id']
-      
+    
       mscope = desc['id'].split('/').map{ |scope| scope.capitalize.camelcase }
       mscope[0..-2].each do |scope|
         model_description << "module #{scope}"
       end
-      
+    
       model_description << "class #{mscope[-1]}" 
       model_description << "include DataMapper::Resource"
       model_description << "storage_names[:#{repo}] = '#{storage_name}';"
       model_description << "def self.default_repository_name; :#{repo}; end"
       model_description << "def self.is_reflected?; true; end"
-
+    
       desc['properties'].each_pair do |key, value|
         line  = "property :#{key}, #{value[:type]}"
         line += ", :field => '#{value[:field]}'" unless value[:field].blank?
@@ -42,7 +42,7 @@ module DataMapper
         model_description << line
       end
       model_description << "end # Class #{mscope[-1]}"
-      
+    
       mscope[0..-2].each do |scope|
         model_description << "end # Module #{scope}"
       end
@@ -71,8 +71,40 @@ module DataMapper
       end
       models
     end
+
+    def self.reflect_new(repository, namespace=nil, overwrite=false)
+      adapter = DataMapper.repository(repository).adapter
+      models = Array.new
+      adapter.get_storage_names.each do |model|
+        unamed_class = DataMapper::Model.new do 
+            storage_names[repository] = model.to_s;
+            self.class_eval("def self.default_repository_name; :#{repository}; end")
+            def self.is_reflected?; true; end
+        end
+        
+        context = namespace.nil? ? Object : namespace
+        # If the first part of the model name matches the context, we need to strip it
+        ctxtname = adapter.resource_naming_convention.call(namespace.to_s)
+        # The problem at this point is that data_objects adapters can't distinguish (in reflection)
+        # between Module::Class => module_class and ModuleClass => module_class
+        # This can/should probably be fixed in the extlib/ar inflections.
+        match = /(#{ctxtname})?(^|_|\/)(.*)/.match(model)
+        new_model_name = Extlib::Inflection.classify(match[3])
+        #puts "CTXT: #{ctxtname} Match: #{match[3]} MN: #{new_model_name}"
+        new_model = context.const_set(new_model_name, unamed_class)
+        
+        # Add properties to it
+        attributes = adapter.get_properties(model)
+        attributes.each do |attribute|
+          attribute.delete_if { |k,v| v.nil? }
+          new_model.property(attribute.delete(:name).to_sym, attribute.delete(:type), attribute)
+        end
+        models << new_model
+      end
+      models
+    end
   end # module Reflection
-  
+
   module Adapters
     extendable do
       ##

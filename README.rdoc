@@ -62,10 +62,10 @@ Also, you can create models from a repository by doing the following:
 * Support Associations/Relationships
 * Support Single Table Inheritance
 * Ensure Round tripping is functional
-  * Create model M in DataMapper
-  * Migrate M to a repository
-  * Reflect M' from the repository
-  * M should == M'
+  ** Create model M in DataMapper
+  ** Migrate M to a repository
+  ** Reflect M' from the repository
+  ** M should == M'
   
 * Having round tripping provably working is the first goal
 * Legacy reflection is something to make work after round tripping (because the assumptions DM makes won't always hold.)
@@ -73,5 +73,5 @@ Also, you can create models from a repository by doing the following:
 == Copyright
 
 See LICENSE for details.
-- Copyright (c) 2009 Martin Gamsjaeger (snusnu).
-- Copyright (c) 2010 Montana State University, Bozeman (The Yogo Data Management Team).
+Copyright (c) 2009 Martin Gamsjaeger (snusnu). 
+Copyright (c) 2010 Montana State University, Bozeman (The Yogo Data Management Team).
