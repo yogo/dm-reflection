@@ -8,8 +8,6 @@ begin
 
   require File.expand_path('../lib/dm-reflection/version', __FILE__)
 
-  FileList['tasks/**/*.rake'].each { |task| load task }
-
   Jeweler::Tasks.new do |gem|
 
     gem.version     = DataMapper::Reflection::VERSION
@@ -29,6 +27,8 @@ begin
   end
 
   Jeweler::GemcutterTasks.new
+
+  FileList['tasks/**/*.rake'].each { |task| import task }
 
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler"
