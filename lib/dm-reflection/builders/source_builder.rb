@@ -300,7 +300,15 @@ module DataMapper
             :has
           end
           def cardinality
-            max == Infinity ? "#{min}..n" : super
+            max_string = max == Infinity ? 'n' : max.to_s
+
+            if min == 0 || min == max
+              max_string
+            elsif max == Infinity
+              "#{min}..#{max_string}"
+            else
+              super
+            end
           end
         end
 
