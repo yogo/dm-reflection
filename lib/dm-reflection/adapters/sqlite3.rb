@@ -5,7 +5,7 @@ module DataMapper
       ##
       # Convert the database type into a DataMapper type
       # 
-      # @todo This should be verified to identify all mysql primitive types 
+      # @todo This should be verified to identify all sqlite3 primitive types 
       #       and that they map to the correct DataMapper/Ruby types.
       # 
       # @param [String] db_type type specified by the database
