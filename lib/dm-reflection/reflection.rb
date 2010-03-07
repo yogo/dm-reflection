@@ -54,10 +54,10 @@ module DataMapper
     extendable do
       ##
       # Glue method that will register reflection extensions for adapters if the adapters are loaded.
-      # 
+      #
       # @param [Constant] const_name is the constant defined by the adapter.
       # @api private
-      # 
+      #
       def const_added(const_name)
         if DataMapper::Reflection.const_defined?(const_name)
           adapter = const_get(const_name)

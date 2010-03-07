@@ -2,18 +2,18 @@ module DataMapper
   module Reflection
     ##
     # @todo The postgres adapter extensions have not been tested yet.
-    # 
+    #
     module PostgresAdapter
 
       ##
       # Convert the database type into a DataMapper type
-      # 
-      # @todo This should be verified to identify all mysql primitive types 
+      #
+      # @todo This should be verified to identify all mysql primitive types
       #       and that they map to the correct DataMapper/Ruby types.
-      # 
+      #
       # @param [String] db_type type specified by the database
       # @return [Type] a DataMapper or Ruby type object.
-      # 
+      #
       def get_type(db_type)
         {
           'integer'                     =>  Integer        ,
@@ -31,9 +31,9 @@ module DataMapper
 
       ##
       # Get the list of table names
-      # 
+      #
       # @return [String Array] the names of the tables in the database.
-      # 
+      #
       def get_storage_names
         select(<<-SQL.compress_lines)
           SELECT "relname"
@@ -60,13 +60,13 @@ module DataMapper
 
       ##
       # Get the column specifications for a specific table
-      # 
-      # @todo Consider returning actual DataMapper::Properties from this. 
+      #
+      # @todo Consider returning actual DataMapper::Properties from this.
       #       It would probably require passing in a Model Object.
-      # 
+      #
       # @param [String] table the name of the table to get column specifications for
       # @return [Hash] the column specs are returned in a hash keyed by `:name`, `:field`, `:type`, `:required`, `:default`, `:key`
-      # 
+      #
       def get_properties(table)
         columns = select(<<-SQL.compress_lines, schema_name, table)
             SELECT "column_name"
@@ -120,7 +120,7 @@ module DataMapper
           attribute
         end
       end
-      
+
     end # module PostgresAdapter
   end # module Reflection
 end # module DataMapper

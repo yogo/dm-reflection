@@ -315,7 +315,7 @@ module DataMapper
         class ManyToMany < OneToMany
         end
 
-        
+
       end
     end
   end

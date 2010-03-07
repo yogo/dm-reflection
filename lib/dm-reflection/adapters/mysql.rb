@@ -1,16 +1,16 @@
 module DataMapper
   module Reflection
     module MysqlAdapter
-      
+
       ##
       # Convert the database type into a DataMapper type
-      # 
-      # @todo This should be verified to identify all mysql primitive types 
+      #
+      # @todo This should be verified to identify all mysql primitive types
       #       and that they map to the correct DataMapper/Ruby types.
-      # 
+      #
       # @param [String] db_type type specified by the database
       # @return [Type] a DataMapper or Ruby type object.
-      # 
+      #
       def get_type(db_type)
         # TODO: return a Hash with the :type, :min, :max and other
         # options rather than just the type
@@ -46,9 +46,9 @@ module DataMapper
 
       ##
       # Get the list of table names
-      # 
+      #
       # @return [String Array] the names of the tables in the database.
-      # 
+      #
       def get_storage_names
         # This gets all the non view tables, but has to strip column 0 out of the two column response.
         select("SHOW FULL TABLES FROM #{options[:path][1..-1]} WHERE Table_type = 'BASE TABLE'").map { |item| item.first }
@@ -56,13 +56,13 @@ module DataMapper
 
       ##
       # Get the column specifications for a specific table
-      # 
-      # @todo Consider returning actual DataMapper::Properties from this. 
+      #
+      # @todo Consider returning actual DataMapper::Properties from this.
       #       It would probably require passing in a Model Object.
-      # 
+      #
       # @param [String] table the name of the table to get column specifications for
       # @return [Hash] the column specs are returned in a hash keyed by `:name`, `:field`, `:type`, `:required`, `:default`, `:key`
-      # 
+      #
       def get_properties(table)
         # TODO: use SHOW INDEXES to find out unique and non-unique indexes
 

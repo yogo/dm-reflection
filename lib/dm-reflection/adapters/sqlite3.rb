@@ -1,16 +1,16 @@
 module DataMapper
   module Reflection
     module Sqlite3Adapter
-      
+
       ##
       # Convert the database type into a DataMapper type
-      # 
-      # @todo This should be verified to identify all sqlite3 primitive types 
+      #
+      # @todo This should be verified to identify all sqlite3 primitive types
       #       and that they map to the correct DataMapper/Ruby types.
-      # 
+      #
       # @param [String] db_type type specified by the database
       # @return [Type] a DataMapper or Ruby type object.
-      # 
+      #
       def get_type(db_type)
         db_type.match(/\A(\w+)/)
         {
@@ -27,9 +27,9 @@ module DataMapper
 
       ##
       # Get the list of table names
-      # 
+      #
       # @return [String Array] the names of the tables in the database.
-      #       
+      #
       def get_storage_names
         select(<<-SQL.compress_lines)
             SELECT name
@@ -42,13 +42,13 @@ module DataMapper
 
       ##
       # Get the column specifications for a specific table
-      # 
-      # @todo Consider returning actual DataMapper::Properties from this. 
+      #
+      # @todo Consider returning actual DataMapper::Properties from this.
       #       It would probably require passing in a Model Object.
-      # 
+      #
       # @param [String] table the name of the table to get column specifications for
       # @return [Hash] the column specs are returned in a hash keyed by `:name`, `:field`, `:type`, `:required`, `:default`, `:key`
-      # 
+      #
       def get_properties(table)
         # TODO: consider using "SELECT sql FROM sqlite_master WHERE tbl_name = ?"
         # and parsing the create table statement since it will provide
@@ -79,7 +79,7 @@ module DataMapper
           attribute
         end
       end
-      
+
     end # module Sqlite3Adapter
   end # module Reflection
 end # module DataMapper
