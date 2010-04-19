@@ -77,6 +77,7 @@ module DataMapper
             value.delete('format')
             value.delete('unique')
             value.delete('index')
+            value.delete('items')
             value.keys.each { |key| value[key.to_sym] = value[key]; value.delete(key) }
             property.merge!(value)
             results << property
