@@ -15,9 +15,9 @@ begin
     gem.name        = "dm-reflection"
     gem.summary     = %Q{Generates datamapper models from existing database schemas}
     gem.description = %Q{Generates datamapper models from existing database schemas and export them to files}
-    gem.email       = "gamsnjaga@gmail.com"
-    gem.homepage    = "http://github.com/snusnu/dm-schema_reflection"
-    gem.authors     = ["Martin Gamsjaeger (snusnu)"]
+    gem.email       = "irjudson@gmail.com"
+    gem.homepage    = "http://github.com/irjudson/dm-reflection"
+    gem.authors     = ["Martin Gamsjaeger (snusnu), Yogo Team"]
 
     gem.add_dependency 'dm-core', '~> 0.10.2'
 
