@@ -34,3 +34,8 @@ setup_adapter(:default)
 Spec::Runner.configure do |config|
 
 end
+
+def remove_model_from_memory(model)
+  DataMapper::Model.descendants.delete(model)
+  Object.send(:remove_const, model.name.to_sym)
+end
