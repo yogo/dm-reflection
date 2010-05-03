@@ -52,12 +52,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.6}
   s.summary = %q{Generates datamapper models from existing database schemas}
   s.test_files = [
-<<<<<<< HEAD
     "spec/persevere_reflection_spec.rb",
-=======
-    "spec/mock_persevere_adapter.rb",
-     "spec/persevere_reflection_spec.rb",
->>>>>>> 64d1aa044787d3378fe1eb10a2d76d42b17d4102
      "spec/reflection_spec.rb",
      "spec/source_builder_spec.rb",
      "spec/spec_helper.rb"
