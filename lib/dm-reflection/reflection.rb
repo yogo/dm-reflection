@@ -28,6 +28,9 @@ module DataMapper
         next if namespace.const_defined?(model_name) && !overwrite
 
         anonymous_model = DataMapper::Model.new do
+          class_eval <<-RUBY, __FILE__, __LINE__
+            storage_names[#{repository.inspect}]='#{storage_name}'
+          RUBY
           unless repository == DataMapper::Repository.default_name
             class_eval <<-RUBY, __FILE__, __LINE__
               def self.default_repository_name
