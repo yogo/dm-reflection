@@ -5,19 +5,12 @@
 
 Gem::Specification.new do |s|
   s.name = %q{dm-reflection}
-<<<<<<< HEAD
   s.version = "0.0.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Martin Gamsjaeger (snusnu), Yogo Team"]
   s.date = %q{2010-05-03}
-=======
-  s.version = "0.0.2"
 
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Martin Gamsjaeger (snusnu), Yogo Team"]
-  s.date = %q{2010-04-19}
->>>>>>> 64d1aa044787d3378fe1eb10a2d76d42b17d4102
   s.description = %q{Generates datamapper models from existing database schemas and export them to files}
   s.email = %q{irjudson@gmail.com}
   s.extra_rdoc_files = [
