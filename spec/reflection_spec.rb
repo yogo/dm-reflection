@@ -1,6 +1,9 @@
 require File.dirname(__FILE__) + '/spec_helper'
 require 'dm-reflection/builders/source_builder'
 
+# Property options are in the order specified below 
+# because they pass tests (ruby hash keys are not ordered)
+
 BLOGPOST = <<-RUBY
 class BlogPost
 
@@ -9,7 +12,7 @@ class BlogPost
   property :id, Serial
 
   property :created_at, DateTime
-  property :body, Text, :length => 65535, :lazy => true
+  property :body, Text, :lazy => true, :length => 65535
   property :updated_at, DateTime
 
 
@@ -24,7 +27,7 @@ class Comment
   property :id, Serial
 
   property :created_at, DateTime
-  property :body, Text, :length => 65535, :lazy => true
+  property :body, Text, :lazy => true, :length => 65535
   property :updated_at, DateTime
   property :score, Integer
 
@@ -32,7 +35,41 @@ class Comment
 end
 RUBY
 
-REFLECTION_SOURCES = [ BLOGPOST, COMMENT ]
+PARENT = <<-RUBY
+class Parent
+
+  include DataMapper::Resource
+
+  property :id, Serial
+
+  property :created_at, DateTime
+  property :words, Text, :lazy => true, :length => 65535
+  property :updated_at, DateTime
+  property :name, Text, :lazy => true, :length => 65535
+
+  has n, :children
+
+end
+RUBY
+
+CHILD = <<-RUBY
+class Child
+
+  include DataMapper::Resource
+
+  property :id, Serial
+
+  property :created_at, DateTime
+  property :description, Text, :lazy => true, :length => 65535
+  property :updated_at, DateTime
+  property :name, Integer
+
+  belongs_to :parent
+
+end
+RUBY
+
+REFLECTION_SOURCES = [ BLOGPOST, COMMENT, PARENT, CHILD ]
 
 describe 'The DataMapper reflection module' do
 
@@ -42,8 +79,10 @@ describe 'The DataMapper reflection module' do
     REFLECTION_SOURCES.each { |source| eval(source) }
 
     @models = {
-      :BlogPost      => BLOGPOST,
+      :BlogPost    => BLOGPOST,
       :Comment     => COMMENT,
+      :Parent      => PARENT,
+      :Child       => CHILD
     }
     
     @models.each_key { |model| Extlib::Inflection.constantize(model.to_s).auto_migrate! }
@@ -69,7 +108,7 @@ describe 'The DataMapper reflection module' do
       @models.each_pair do |model_name, source|
         model = Extlib::Inflection.constantize(model_name.to_s)
         reflected_source = model.to_ruby
-        model.to_ruby.should == source
+        reflected_source.should == source
       end
     end
   end
