@@ -10,7 +10,7 @@ module DataMapper
     def self.reflect(repository, namespace = Object, overwrite = false)
       adapter = DataMapper.repository(repository).adapter
 
-      models  = []
+      models  = Hash.new
 
       adapter.get_storage_names.each do |storage_name|
         namespace_parts = storage_name.split('__').map do |part|
@@ -40,16 +40,26 @@ module DataMapper
           end
         end
 
-        model = namespace.const_set(model_name, anonymous_model)
-
-        adapter.get_properties(storage_name).each do |attribute|
-          attribute.delete_if { |k,v| v.nil? }
-          model.property(attribute.delete(:name).to_sym, attribute.delete(:type), attribute)
-        end
-
-        models << model
+        models[model_name] = namespace.const_set(model_name, anonymous_model)
       end
-      models
+
+      models.values.each do |model|
+        adapter.get_properties(model.storage_name).each do |attribute|
+          if attribute[:type] == DataMapper::Associations::Relationship
+            parent = models[attribute[:relationship][:parent]]
+            child = models[attribute[:relationship][:child]]
+            child.belongs_to(parent.name.downcase.to_sym)
+            if attribute[:relationship][:bidirectional]
+              parent.has(attribute[:relationship][:cardinality], child.name.pluralize.downcase.to_sym)
+            end
+          else
+            attribute.delete_if { |k,v| v.nil? }
+            model.property(attribute.delete(:name).to_sym, attribute.delete(:type), attribute)
+          end
+        end
+      end
+        
+      models.to_a
     end
   end # module Reflection
 
