@@ -90,7 +90,7 @@ module DataMapper
       
       # Turns 'class_path/class' into 'ClassPath::Class
       def derive_relationship_model(input)
-        input.match(/(Class)?\/([a-z\-\/\_]+)$/)[-1].split('/').map{|i| ExtLib::Inflection.classify(i) }.join("::")
+        input.match(/(Class)?\/([a-z\-\/\_]+)$/)[-1].split('/').map{|i| Extlib::Inflection.classify(i) }.join("::")
       end
       
     end # module PersevereAdapter
