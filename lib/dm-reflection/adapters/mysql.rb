@@ -74,14 +74,29 @@ module DataMapper
             type = DataMapper::Types::Serial
           end
 
+          field_name = column.field.downcase
+
           attribute = {
-            :name     => column.field.downcase,
+            :name     => field_name,
             :type     => type,
             :required => column.null == 'NO',
             :default  => column.default,
             :key      => column.key == 'PRI',
           }
-
+          
+          if type == Integer && field_name[-3,3] == "_id"
+            # This is a foriegn key. So this model belongs_to the other (_id) one.
+            # Add a special set of values and flag this as a relationship so the reflection code
+            # can rebuild the relationship when it's building the model.
+            attribute[:type] = DataMapper::Associations::Relationship
+            attribute[:relationship] = { 
+              :parent => Extlib::Inflection.classify(field_name[0..-4]), 
+              :child => Extlib::Inflection.classify(table), 
+              # When we can detect more from the database we can optimize this
+              :cardinality => Infinity, 
+              :bidirectional => true }
+          end
+          
           # TODO: use the naming convention to compare the name vs the column name
           unless attribute[:name] == column.field
             attribute[:field] = column.field
