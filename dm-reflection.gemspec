@@ -5,14 +5,13 @@
 
 Gem::Specification.new do |s|
   s.name = %q{dm-reflection}
-  s.version = "0.0.5"
+  s.version = "0.10.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Martin Gamsjaeger (snusnu), Yogo Team"]
-  s.date = %q{2010-05-03}
-
+  s.date = %q{2010-05-05}
   s.description = %q{Generates datamapper models from existing database schemas and export them to files}
-  s.email = %q{irjudson@gmail.com}
+  s.email = %q{irjudson [a] gmail [d] com}
   s.extra_rdoc_files = [
     "LICENSE",
      "README.rdoc"
@@ -32,7 +31,6 @@ Gem::Specification.new do |s|
      "lib/dm-reflection/adapters/sqlite3.rb",
      "lib/dm-reflection/builders/source_builder.rb",
      "lib/dm-reflection/reflection.rb",
-     "lib/dm-reflection/version.rb",
      "spec/persevere_reflection_spec.rb",
      "spec/rcov.opts",
      "spec/reflection_spec.rb",
@@ -46,7 +44,7 @@ Gem::Specification.new do |s|
      "tasks/yard.rake",
      "tasks/yardstick.rake"
   ]
-  s.homepage = %q{http://github.com/irjudson/dm-reflection}
+  s.homepage = %q{http://github.com/yogo/dm-reflection}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.6}
