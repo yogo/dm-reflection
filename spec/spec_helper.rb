@@ -9,9 +9,9 @@ require 'dm-reflection'
 require 'spec'
 require 'spec/autorun'
 
-ENV["SQLITE3_SPEC_URI"]  ||= 'sqlite3::memory:'
-ENV["MYSQL_SPEC_URI"]    ||= 'mysql://localhost/dm-reflections_test'
-ENV["POSTGRES_SPEC_URI"] ||= 'postgres://postgres@localhost/dm-reflection_test'
+ENV["SQLITE3_SPEC_URI"]   ||= 'sqlite3::memory:'
+ENV["MYSQL_SPEC_URI"]     ||= 'mysql://localhost/dm_reflection_test'
+ENV["POSTGRES_SPEC_URI"]  ||= 'postgres://postgres@localhost/dm-reflection_test'
 ENV["PERSEVERE_SPEC_URI"] ||= 'persevere://localhost:8080/'
 
 def setup_adapter(name, default_uri = nil)
