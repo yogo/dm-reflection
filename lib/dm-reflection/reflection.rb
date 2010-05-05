@@ -59,7 +59,7 @@ module DataMapper
         end
       end
         
-      models.to_a
+      models.values
     end
   end # module Reflection
 
