@@ -36,6 +36,11 @@ module DataMapper
           end
         end
       end
+      
+      def separator
+        '/'
+      end
+      
       ##
       # Get the list of schema names
       #

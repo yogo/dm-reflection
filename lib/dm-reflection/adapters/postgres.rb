@@ -29,6 +29,10 @@ module DataMapper
         }[db_type] || raise("unknown db type: #{db_type}")
       end
 
+      def separator
+        '--'
+      end
+
       ##
       # Get the list of table names
       #

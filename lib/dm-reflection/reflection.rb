@@ -9,11 +9,11 @@ module DataMapper
     #
     def self.reflect(repository, namespace = Object, overwrite = false)
       adapter = DataMapper.repository(repository).adapter
-
+      separator = adapter.separator
       models  = Hash.new
 
       adapter.get_storage_names.each do |storage_name|
-        namespace_parts = storage_name.split('__').map do |part|
+        namespace_parts = storage_name.split(separator).map do |part|
           Extlib::Inflection.classify(part)
         end
 
