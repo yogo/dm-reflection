@@ -48,7 +48,7 @@ module DataMapper
       #
       def get_storage_names
         @schemas = self.get_schema
-        @schemas.map { |schema| schema['id'].gsub('/', '__') }
+        @schemas.map { |schema| schema['id'] }
       end
 
       ##
@@ -63,7 +63,7 @@ module DataMapper
       chainable do
         def get_properties(table)
           results = Array.new
-          schema = self.get_schema(table.gsub('__', '/'))[0]
+          schema = self.get_schema(table)[0]
           schema['properties'].each_pair do |key, value|
             type = get_type(value)
             property = {:name => key, :type => type }
