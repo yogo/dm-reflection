@@ -48,6 +48,9 @@ module DataMapper
           if attribute[:type] == DataMapper::Associations::Relationship
             parent = models[attribute[:relationship][:parent]]
             child = models[attribute[:relationship][:child]]
+            if parent.nil? or child.nil?
+              puts "Reflection error: P: #{parent.inspect} C: #{child.inspect} A: #{attribute[:relationship].inspect}"
+            end
             child.belongs_to(parent.name.downcase.to_sym)
             if attribute[:relationship][:bidirectional]
               parent.has(attribute[:relationship][:cardinality], child.name.pluralize.downcase.to_sym)

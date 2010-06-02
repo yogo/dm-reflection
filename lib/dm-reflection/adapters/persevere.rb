@@ -19,8 +19,6 @@ module DataMapper
           format = db_type['format']
 
           case type
-          when Hash        then DataMapper::Types::JsonReference
-          when 'array'     then DataMapper::Types::JsonReferenceCollection
           when 'serial'    then DataMapper::Types::Serial
           when 'integer'   then Integer
           # when 'number'    then BigDecimal
@@ -69,14 +67,6 @@ module DataMapper
             property = {:name => key, :type => type }
             property.merge!({ :required => !value.delete('optional'),
                               :key => value.has_key?('index') && value.delete('index') }) unless property[:type] == DataMapper::Types::Serial
-                              
-            if type.kind_of?(DataMapper::Types::JsonReference)
-              property.merge!( {:reference => derive_relationship_model(value[:type]["$ref"])} )
-            end
-            
-            if type.kind_of?(DataMapper::Types::JsonReferenceCollection)
-              property.merge!( {:reference => derive_relationship_model(value[:items]["$ref"])} )
-            end
             
             value.delete('type')
             value.delete('format')

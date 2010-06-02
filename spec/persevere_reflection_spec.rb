@@ -28,8 +28,6 @@ if ENV['ADAPTER'] == 'persevere'
     property :body, Text, :length => 65535, :lazy => true
     property :updated_at, DateTime
     property :score, Integer
-    property :blog_post, DataMapper::Types::JsonReference, :reference => :Post
-
 
   end
   RUBY
@@ -49,8 +47,6 @@ if ENV['ADAPTER'] == 'persevere'
         }
 
         @models.each_key { |model| Extlib::Inflection.constantize(model.to_s).auto_migrate! }
-        Post.send(:property, :comments, DataMapper::Types::JsonReferenceCollection, :reference => :PostComment)
-        Post.auto_upgrade!
         @models.each_key { |model| remove_model_from_memory( Extlib::Inflection.constantize(model.to_s) ) }
     end
     
@@ -74,12 +70,6 @@ if ENV['ADAPTER'] == 'persevere'
     it "should return a table definition" do
       result = @adapter.get_properties("post")
       result.should be_kind_of(Array)
-    end
-    
-    it "should reflect out JsonReference types" do
-      DataMapper::Reflection.reflect(:default)
-      PostComment.properties[:blog_post].type.should eql DataMapper::Types::JsonReference
-      Post.properties[:comments].type.should eql DataMapper::Types::JsonReferenceCollection
     end
 
   end
