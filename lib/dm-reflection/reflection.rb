@@ -43,17 +43,26 @@ module DataMapper
         models[model_name] = namespace.const_set(model_name, anonymous_model)
       end
 
-      models.values.each do |model|
+      join_models = Array.new
+      
+      models.each do |model_name, model|
         adapter.get_properties(model.storage_name).each do |attribute|
           if attribute[:type] == DataMapper::Associations::Relationship
             parent = models[attribute[:relationship][:parent]]
             child = models[attribute[:relationship][:child]]
             if parent.nil? or child.nil?
-              puts "Reflection error: P: #{parent.inspect} C: #{child.inspect} A: #{attribute[:relationship].inspect}"
+              puts "Reflection Relationship: P: #{parent.inspect} C: #{child.inspect} A: #{attribute[:relationship].inspect}"
             end
-            child.belongs_to(parent.name.downcase.to_sym)
-            if attribute[:relationship][:bidirectional]
-              parent.has(attribute[:relationship][:cardinality], child.name.pluralize.downcase.to_sym)
+            if attribute[:relationship][:many_to_many]
+              parent.has(attribute[:relationship][:cardinality], child.name.tableize.pluralize.downcase.to_sym, :through => DataMapper::Resource, :model => child)
+              child.has(attribute[:relationship][:cardinality], parent.name.tableize.pluralize.downcase.to_sym, :through => DataMapper::Resource, :model => parent)
+              # Remove join model
+              join_models << model_name
+            else
+              child.belongs_to(parent.name.tableize.downcase.to_sym, :model => parent)
+              if attribute[:relationship][:bidirectional]
+                parent.has(attribute[:relationship][:cardinality], child.name.tableize.pluralize.downcase.to_sym, :model => child)
+              end
             end
           else
             attribute.delete_if { |k,v| v.nil? }
@@ -61,7 +70,12 @@ module DataMapper
           end
         end
       end
-        
+          
+      join_models.each do |model|
+        models.delete(model)
+        DataMapper::Model.descendants.delete(model)
+      end
+
       models.values
     end
   end # module Reflection
