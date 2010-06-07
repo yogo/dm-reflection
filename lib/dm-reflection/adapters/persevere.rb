@@ -15,10 +15,14 @@ module DataMapper
       #
       chainable do
         def get_type(db_type)
+          
+          return :has_one_relation if db_type.has_key?("$ref") 
+          
           type = db_type['type']
           format = db_type['format']
 
           case type
+          when 'array'     then :has_many_relation
           when 'serial'    then DataMapper::Types::Serial
           when 'integer'   then Integer
           # when 'number'    then BigDecimal
@@ -60,24 +64,35 @@ module DataMapper
       #
       chainable do
         def get_properties(table)
-          results = Array.new
+          attributes = Array.new
           schema = self.get_schema(table)[0]
           schema['properties'].each_pair do |key, value|
+            debugger if value.is_a?(Hash)
             type = get_type(value)
-            property = {:name => key, :type => type }
-            property.merge!({ :required => !value.delete('optional'),
-                              :key => value.has_key?('index') && value.delete('index') }) unless property[:type] == DataMapper::Types::Serial
             
-            value.delete('type')
-            value.delete('format')
-            value.delete('unique')
-            value.delete('index')
-            value.delete('items')
-            value.keys.each { |key| value[key.to_sym] = value[key]; value.delete(key) }
-            property.merge!(value)
-            results << property
+            attribute = { :name => key }
+            
+            if type == :has_one_relation
+              # Has one
+              # Retrieve the other side to determine the cardinality
+              other_table = [table.split('/')[0..-2], value['$ref']].join("/")
+              other_schema = self.get_schema(other_table)[0]
+
+            elsif type == :has_many_relation
+              # Has many
+              # Retrieve the other side to determine the cardinality
+              other_table = [table.split('/')[0..-2], value['items']['$ref']].join("/")
+              other_schema = self.get_schema(other_table)[0]
+              
+            else
+              attribute.merge!({ :type => type, :required => !value.delete('optional'), :key => value.has_key?('index') && value.delete('index') }) unless attribute[:type] == DataMapper::Types::Serial
+              ['type', 'format', 'unique', 'index', 'items'].each { |key| value.delete(key) }
+              value.keys.each { |key| value[key.to_sym] = value[key]; value.delete(key) }
+              attribute.merge!(value)
+              attributes << attribute
+            end
           end
-          return results
+          return attributes
         end
       end
 
