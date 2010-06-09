@@ -67,7 +67,6 @@ module DataMapper
           attributes = Array.new
           schema = self.get_schema(table)[0]
           schema['properties'].each_pair do |key, value|
-            debugger if value.is_a?(Hash)
             type = get_type(value)
             
             attribute = { :name => key }
