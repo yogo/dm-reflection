@@ -48,6 +48,7 @@ module DataMapper
       models.each do |model_name, model|
         adapter.get_properties(model.storage_name).each do |attribute|
           if attribute[:type] == :many_to_many
+            attribute.delete(:type)
             parent = models[attribute[:relationship][:parent].delete]
             child = models[attribute[:relationship][:child].delete]
             
@@ -62,11 +63,11 @@ module DataMapper
             model.has(attribute.delete(:cardinality), attribute.delete(:name), attribute)
           elsif attribute[:type] == :belongs_to
             attribute.delete(:type)
-
+            other_side = attribute.delete(:other_side)
             model.belongs_to(attribute.delete(:name), attribute)
-            # if attribute[:relationship][:bidirectional]
-            #   parent.has(attribute[:relationship][:cardinality], child.name.split('::')[-1].tableize.pluralize.downcase.to_sym, :model => child)
-            # end
+            unless other_side.nil?
+              models[other_side[:model].delete].has(other_side.delete(:cardinality), other_side.delete(:name), other_side)
+            end
           else
             attribute.delete_if { |k,v| v.nil? }
             model.property(attribute.delete(:name).to_sym, attribute.delete(:type), attribute)

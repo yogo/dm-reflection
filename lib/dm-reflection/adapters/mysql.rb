@@ -118,7 +118,7 @@ module DataMapper
           end
           
           if join_table
-            attribute[:type] = DataMapper::Associations::Relationship
+            attribute[:type] = :many_to_many
             attribute[:relationship] = {
               # M:M requires we wire things a bit differently and remove the join model
               :many_to_many => true,
@@ -132,14 +132,13 @@ module DataMapper
             # This is a foriegn key. So this model belongs_to the other (_id) one.
             # Add a special set of values and flag this as a relationship so the reflection code
             # can rebuild the relationship when it's building the model.
-            attribute[:type] = DataMapper::Associations::Relationship
-            attribute[:relationship] = { 
-              :many_to_many => false,
-              :parent => Extlib::Inflection.classify(field_name[0..-4]), 
-              :child => Extlib::Inflection.classify(table), 
+            attribute[:type] = :belongs_to
+            
+            attribute[:other_side] = { 
+              :model => Extlib::Inflection.classify(field_name[0..-4]),
+              :name => Extlib::Inflection.classify(field_name[0..-4]).pluralize,
               # When we can detect more from the database we can optimize this
-              :cardinality => Infinity, 
-              :bidirectional => true }
+              :cardinality => Infinity }
           end
           attribute
         end
