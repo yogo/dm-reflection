@@ -39,31 +39,34 @@ module DataMapper
             RUBY
           end
         end
-
-        models[model_name] = namespace.const_set(model_name, anonymous_model)
+        full_name = [namespace_parts, model_name].join('::')
+        models[full_name] = namespace.const_set(model_name, anonymous_model)
       end
 
       join_models = Array.new
       
       models.each do |model_name, model|
         adapter.get_properties(model.storage_name).each do |attribute|
-          if attribute[:type] == DataMapper::Associations::Relationship
-            parent = models[attribute[:relationship][:parent]]
-            child = models[attribute[:relationship][:child]]
-            if parent.nil? or child.nil?
-              puts "Reflection Relationship: P: #{parent.inspect} C: #{child.inspect} A: #{attribute[:relationship].inspect}"
-            end
-            if attribute[:relationship][:many_to_many]
-              parent.has(attribute[:relationship][:cardinality], child.name.tableize.pluralize.downcase.to_sym, :through => DataMapper::Resource, :model => child)
-              child.has(attribute[:relationship][:cardinality], parent.name.tableize.pluralize.downcase.to_sym, :through => DataMapper::Resource, :model => parent)
-              # Remove join model
-              join_models << model_name
-            else
-              child.belongs_to(parent.name.tableize.downcase.to_sym, :model => parent)
-              if attribute[:relationship][:bidirectional]
-                parent.has(attribute[:relationship][:cardinality], child.name.tableize.pluralize.downcase.to_sym, :model => child)
-              end
-            end
+          if attribute[:type] == :many_to_many
+            parent = models[attribute[:relationship][:parent].delete]
+            child = models[attribute[:relationship][:child].delete]
+            
+            cardinality = attribute[:cardinality].delete
+            parent.has(cardinality, child.name.split('::')[-1].tableize.pluralize.downcase.to_sym, attribute.merge({:through => DataMapper::Resource, :model => child}))
+            child.has(cardinality, parent.name.split('::')[-1].tableize.pluralize.downcase.to_sym, attribute.merge({:through => DataMapper::Resource, :model => parent}))
+            # Remove join model
+            join_models << model_name
+          elsif attribute[:type] == :has_n
+            attribute.delete(:type)
+
+            model.has(attribute.delete(:cardinality), attribute.delete(:name), attribute)
+          elsif attribute[:type] == :belongs_to
+            attribute.delete(:type)
+
+            model.belongs_to(attribute.delete(:name), attribute)
+            # if attribute[:relationship][:bidirectional]
+            #   parent.has(attribute[:relationship][:cardinality], child.name.split('::')[-1].tableize.pluralize.downcase.to_sym, :model => child)
+            # end
           else
             attribute.delete_if { |k,v| v.nil? }
             model.property(attribute.delete(:name).to_sym, attribute.delete(:type), attribute)

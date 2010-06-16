@@ -16,13 +16,14 @@ module DataMapper
       chainable do
         def get_type(db_type)
           
-          return :has_one_relation if db_type.has_key?("$ref") 
+          # return :has_one_relation if db_type.has_key?("$ref")
           
           type = db_type['type']
           format = db_type['format']
 
           case type
-          when 'array'     then :has_many_relation
+          when Hash        then :belongs_to
+          when 'array'     then :has_n
           when 'serial'    then DataMapper::Types::Serial
           when 'integer'   then Integer
           # when 'number'    then BigDecimal
@@ -66,30 +67,44 @@ module DataMapper
         def get_properties(table)
           attributes = Array.new
           schema = self.get_schema(table)[0]
+          if schema.has_key?('properties')
+            
           schema['properties'].each_pair do |key, value|
             type = get_type(value)
+            debugger if type.nil?
+            name = key.sub("#{value['prefix']}#{value['separator']}", "")
+            attribute = { :name => name }
             
-            attribute = { :name => key }
-            
-            if type == :has_one_relation
-              # Has one
-              # Retrieve the other side to determine the cardinality
-              other_table = [table.split('/')[0..-2], value['$ref']].join("/")
-              other_schema = self.get_schema(other_table)[0]
+            if type == :belongs_to
+              # belongs_to
+              attribute[:type] = :belongs_to
 
-            elsif type == :has_many_relation
-              # Has many
-              # Retrieve the other side to determine the cardinality
+              other_table = [table.split('/')[0..-2], value['type']['$ref']].join("/")
+              # other_schema = self.get_schema(other_table)[0]
+              other_class = other_table.split('/').map{|m| m.capitalize }.join('::')
+              # this_class = table.split('/').map{|m| m.capitalize }.join('::')
+              attribute[:model] = other_class
+              attribute[:prefix] = value['prefix'] if value.has_key?('prefix')
+
+            elsif type == :has_n
+              attribute[:type] = :has_n
               other_table = [table.split('/')[0..-2], value['items']['$ref']].join("/")
-              other_schema = self.get_schema(other_table)[0]
-              
+              # other_schema = self.get_schema(other_table)[0]
+              other_class = other_table.split('/').map{|m| m.capitalize }.join('::')
+              # this_class = table.split('/').map{|m| m.capitalize }.join('::')
+
+              attribute[:cardinality] = Infinity
+              attribute[:model] = other_class
+  
+              attribute.merge!({:prefix => value['prefix']}) if value.has_key?('prefix')
             else
               attribute.merge!({ :type => type, :required => !value.delete('optional'), :key => value.has_key?('index') && value.delete('index') }) unless attribute[:type] == DataMapper::Types::Serial
               ['type', 'format', 'unique', 'index', 'items'].each { |key| value.delete(key) }
               value.keys.each { |key| value[key.to_sym] = value[key]; value.delete(key) }
               attribute.merge!(value)
-              attributes << attribute
             end
+            attributes << attribute
+          end
           end
           return attributes
         end
