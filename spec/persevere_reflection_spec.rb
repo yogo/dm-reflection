@@ -46,19 +46,19 @@ if ENV['ADAPTER'] == 'persevere'
           :PostComment     => POST_COMMENT,
         }
 
-        @models.each_key { |model| Extlib::Inflection.constantize(model.to_s).auto_migrate! }
-        @models.each_key { |model| remove_model_from_memory( Extlib::Inflection.constantize(model.to_s) ) }
+        @models.keys.reverse.each { |model| ActiveSupport::Inflector.constantize(model.to_s).auto_migrate! }
+        @models.keys.reverse.each { |model| remove_model_from_memory( ActiveSupport::Inflector.constantize(model.to_s) ) }
     end
     
     after(:each) do
-      @models.each_key do |model_name|
+      @models.keys.reverse.each do |model_name|
         next unless Object.const_defined?(model_name)
-        model = Extlib::Inflection.constantize(model_name.to_s)
+        model = ActiveSupport::Inflector.constantize(model_name.to_s)
         remove_model_from_memory(model)
       end
-      @models.each_key do |model_name|
+      @models.keys.reverse.each do |model_name|
         next unless Object.const_defined?(model_name)
-        model = Extlib::Inflection.constantize(model_name.to_s)
+        model = ActiveSupport::Inflector.constantize(model_name.to_s)
         remove_model_from_memory(model)
       end
     end

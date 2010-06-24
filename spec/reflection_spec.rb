@@ -84,15 +84,15 @@ describe 'The DataMapper reflection module' do
       :Parent      => PARENT,
       :Child       => CHILD
     }
-    
-    @models.each_key { |model| Extlib::Inflection.constantize(model.to_s).auto_migrate! }
-    @models.each_key { |model| remove_model_from_memory( Extlib::Inflection.constantize(model.to_s) ) }
+        
+    @models.keys.reverse.each { |model| ActiveSupport::Inflector.constantize(model.to_s).auto_migrate! }
+    @models.keys.reverse.each { |model| remove_model_from_memory( ActiveSupport::Inflector.constantize(model.to_s) ) }
   end
 
   after(:each) do
-    @models.each_key do |model_name|
+    @models.keys.reverse.each do |model_name|
       next unless Object.const_defined?(model_name)
-      model = Extlib::Inflection.constantize(model_name.to_s)
+      model = ActiveSupport::Inflector.constantize(model_name.to_s)
       model.auto_migrate_down!
       remove_model_from_memory(model)
     end
@@ -101,12 +101,12 @@ describe 'The DataMapper reflection module' do
   describe 'repository(:name).reflect' do
     it 'should reflect all the models in a repository' do      
       # Reflect the models back into memory.
-      DataMapper::Reflection.reflect(:default)
+      results = DataMapper::Reflection.reflect(:default)
       
       # Iterate through each model in memory and verify the source is the same as the original.
       # using model.to_ruby
       @models.each_pair do |model_name, source|
-        model = Extlib::Inflection.constantize(model_name.to_s)
+        model = ActiveSupport::Inflector.constantize(model_name.to_s)
         reflected_source = model.to_ruby
         reflected_source.should == source
       end
@@ -119,7 +119,7 @@ describe 'The DataMapper reflection module' do
       DataMapper::Reflection.reflect(:default)
       
       @models.each_key do |model_name|
-        model = Extlib::Inflection.constantize(model_name.to_s)
+        model = ActiveSupport::Inflector.constantize(model_name.to_s)
         model.should respond_to(:default_repository_name)
         model.default_repository_name.should == :default
       end

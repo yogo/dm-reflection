@@ -1,3 +1,4 @@
+require 'activesupport'
 require 'dm-reflection/reflection'
 require 'dm-reflection/adapters/sqlite3'
 require 'dm-reflection/adapters/persevere'

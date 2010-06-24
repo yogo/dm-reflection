@@ -78,13 +78,10 @@ module DataMapper
             if type == :belongs_to
               # belongs_to
               attribute[:type] = :belongs_to
-              other_table = [table.split('/')[0..-2], value['type']['$ref']].join("/")
-              other_class = other_table.camelize
-              attribute[:model] = other_class
               attribute[:prefix] = value['prefix'] if value.has_key?('prefix')
             elsif type == :has_n
               attribute[:type] = :has_n
-              other_table = [table.split('/')[0..-2], value['items']['$ref']].join("/")
+              other_table = [table.split('/')[0..-2], value['items']['$ref']].flatten.join("/")
               other_class = other_table.camelize
               attribute[:cardinality] = Infinity
               attribute[:model] = other_class  

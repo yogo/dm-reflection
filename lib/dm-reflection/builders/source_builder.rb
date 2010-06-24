@@ -169,7 +169,7 @@ module DataMapper
           end
 
           def type
-            Extlib::Inflection.demodulize(backend.type)
+            ActiveSupport::Inflector.demodulize(backend.type)
           end
 
 
@@ -255,7 +255,7 @@ module DataMapper
           def prioritized_options
             option_priorities.inject([]) do |memo, name|
               if name == :through && through = backend_options[:through]
-                value = through.is_a?(Symbol) ? through : Extlib::Inflection.demodulize(through)
+                value = through.is_a?(Symbol) ? through : ActiveSupport::Inflector.demodulize(through)
                 memo << [ :through, value ]
               end
               memo
