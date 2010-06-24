@@ -14,7 +14,7 @@ module DataMapper
 
       adapter.get_storage_names.each do |storage_name|
         namespace_parts = storage_name.split(separator).map do |part|
-          Extlib::Inflection.classify(part)
+          ActiveSupport::Inflector.classify(part)
         end
 
         model_name = namespace_parts.pop
@@ -39,7 +39,8 @@ module DataMapper
             RUBY
           end
         end
-        full_name = [namespace_parts, model_name].join('::')
+        
+        full_name = namespace_parts.length > 0 ? [namespace_parts, model_name].join('::') : model_name
         models[full_name] = namespace.const_set(model_name, anonymous_model)
       end
 
@@ -49,24 +50,29 @@ module DataMapper
         adapter.get_properties(model.storage_name).each do |attribute|
           if attribute[:type] == :many_to_many
             attribute.delete(:type)
-            parent = models[attribute[:relationship][:parent].delete]
-            child = models[attribute[:relationship][:child].delete]
-            
-            cardinality = attribute[:cardinality].delete
-            parent.has(cardinality, child.name.split('::')[-1].tableize.pluralize.downcase.to_sym, attribute.merge({:through => DataMapper::Resource, :model => child}))
-            child.has(cardinality, parent.name.split('::')[-1].tableize.pluralize.downcase.to_sym, attribute.merge({:through => DataMapper::Resource, :model => parent}))
-            # Remove join model
+            attribute.delete(:name)
+            relationship = attribute.delete(:relationship)
+            parent = models[relationship.delete(:parent)]
+            child = models[relationship.delete(:child)]
+            cardinality = relationship.delete(:cardinality)
+            parent.has(cardinality, relationship[:child_name].to_sym, attribute.merge({:through => DataMapper::Resource, :model => child}))
+            child.has(cardinality, relationship[:parent_name].to_sym, attribute.merge({:through => DataMapper::Resource, :model => parent}))
             join_models << model_name
           elsif attribute[:type] == :has_n
             attribute.delete(:type)
-
-            model.has(attribute.delete(:cardinality), attribute.delete(:name), attribute)
+            model.has(attribute.delete(:cardinality), attribute.delete(:name).to_sym, attribute)
           elsif attribute[:type] == :belongs_to
             attribute.delete(:type)
             other_side = attribute.delete(:other_side)
-            model.belongs_to(attribute.delete(:name), attribute)
+            name = attribute.delete(:name)
+#            puts "#{model.name}.belongs_to(#{name}, #{attribute.inspect})"
+            model.belongs_to(name.to_sym, attribute.dup)
             unless other_side.nil?
-              models[other_side[:model].delete].has(other_side.delete(:cardinality), other_side.delete(:name), other_side)
+              other_name = other_side.delete(:name)
+              cardinality = other_side.delete(:cardinality)
+              other_side[:model] = ActiveSupport::Inflector.singularize(model)
+#              puts "#{models[attribute[:model]]}.has(#{cardinality}, #{other_name}, #{other_side.inspect})"
+              models[attribute[:model]].has(cardinality, other_name.to_sym, other_side)
             end
           else
             attribute.delete_if { |k,v| v.nil? }

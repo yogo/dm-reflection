@@ -78,24 +78,16 @@ module DataMapper
             if type == :belongs_to
               # belongs_to
               attribute[:type] = :belongs_to
-
               other_table = [table.split('/')[0..-2], value['type']['$ref']].join("/")
-              # other_schema = self.get_schema(other_table)[0]
-              other_class = other_table.split('/').map{|m| m.capitalize }.join('::')
-              # this_class = table.split('/').map{|m| m.capitalize }.join('::')
+              other_class = other_table.camelize
               attribute[:model] = other_class
               attribute[:prefix] = value['prefix'] if value.has_key?('prefix')
-
             elsif type == :has_n
               attribute[:type] = :has_n
               other_table = [table.split('/')[0..-2], value['items']['$ref']].join("/")
-              # other_schema = self.get_schema(other_table)[0]
-              other_class = other_table.split('/').map{|m| m.capitalize }.join('::')
-              # this_class = table.split('/').map{|m| m.capitalize }.join('::')
-
+              other_class = other_table.camelize
               attribute[:cardinality] = Infinity
-              attribute[:model] = other_class
-  
+              attribute[:model] = other_class  
               attribute.merge!({:prefix => value['prefix']}) if value.has_key?('prefix')
             else
               attribute.merge!({ :type => type, :required => !value.delete('optional'), :key => value.has_key?('index') && value.delete('index') }) unless attribute[:type] == DataMapper::Types::Serial
@@ -114,7 +106,7 @@ module DataMapper
       
       # Turns 'class_path/class' into 'ClassPath::Class
       def derive_relationship_model(input)
-        input.match(/(Class)?\/([a-z\-\/\_]+)$/)[-1].split('/').map{|i| Extlib::Inflection.classify(i) }.join("::")
+        input.match(/(Class)?\/([a-z\-\/\_]+)$/)[-1].split('/').map{|i| ActiveSupport::Inflector.classify(i) }.join("::")
       end
       
     end # module PersevereAdapter

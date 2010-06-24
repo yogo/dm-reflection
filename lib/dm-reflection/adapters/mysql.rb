@@ -119,26 +119,35 @@ module DataMapper
           
           if join_table
             attribute[:type] = :many_to_many
+            attribute.delete(:default)
+            attribute.delete(:key)
+            attribute.delete(:required)
             attribute[:relationship] = {
               # M:M requires we wire things a bit differently and remove the join model
               :many_to_many => true,
-              :parent => Extlib::Inflection.classify(left_table_name), 
-              :child => Extlib::Inflection.classify(right_table_name), 
+              :parent_name => left_table_name.pluralize,
+              :parent => ActiveSupport::Inflector.classify(left_table_name), 
+              :child_name => right_table_name.pluralize,
+              :child => ActiveSupport::Inflector.classify(right_table_name), 
               # When we can detect more from the database we can optimize this
               :cardinality => Infinity, 
               :bidirectional => true }      
               return [attribute]      
           elsif type == Integer && field_name[-3,3] == "_id"
-            # This is a foriegn key. So this model belongs_to the other (_id) one.
-            # Add a special set of values and flag this as a relationship so the reflection code
-            # can rebuild the relationship when it's building the model.
-            attribute[:type] = :belongs_to
-            
-            attribute[:other_side] = { 
-              :model => Extlib::Inflection.classify(field_name[0..-4]),
-              :name => Extlib::Inflection.classify(field_name[0..-4]).pluralize,
-              # When we can detect more from the database we can optimize this
-              :cardinality => Infinity }
+            attribute.delete(:default)
+            attribute.delete(:key)
+            attribute.delete(:required)
+            fixed_field_name = field_name[0..-4]
+            unless table == ActiveSupport::Inflector.tableize(fixed_field_name)
+              attribute[:type] = :belongs_to
+              attribute[:name] = ActiveSupport::Inflector.singularize(fixed_field_name)
+              attribute[:model] = ActiveSupport::Inflector.classify(attribute[:name])
+              attribute[:other_side] = { 
+                :name => ActiveSupport::Inflector.pluralize(table),
+                :model => ActiveSupport::Inflector.camelize(table),
+                # When we can detect more from the database we can optimize this
+                :cardinality => Infinity }
+            end
           end
           attribute
         end

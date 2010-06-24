@@ -83,8 +83,8 @@ module DataMapper
             # can rebuild the relationship when it's building the model.
             attribute[:type] = DataMapper::Associations::Relationship
             attribute[:relationship] = { 
-              :parent => Extlib::Inflection.classify(field_name[0..-4]), 
-              :child => Extlib::Inflection.classify(table), 
+              :parent => ActiveSupport::Inflector.classify(field_name[0..-4]), 
+              :child => ActiveSupport::Inflector.classify(table), 
               # When we can detect more from the database we can optimize this
               :cardinality => Infinity, 
               :bidirectional => true }
