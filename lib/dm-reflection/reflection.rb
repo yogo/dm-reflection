@@ -56,22 +56,29 @@ module DataMapper
             child = models[relationship.delete(:child)]
             cardinality = relationship.delete(:cardinality)
             parent.has(cardinality, relationship[:child_name].to_sym, attribute.merge({:through => DataMapper::Resource, :model => child}))
+#            puts "#{parent}.has(#{cardinality}, #{relationship[:child_name]}, #{attribute.inspect})"
             child.has(cardinality, relationship[:parent_name].to_sym, attribute.merge({:through => DataMapper::Resource, :model => parent}))
-            join_models << model_name
+#            puts "#{child}.has(#{cardinality}, #{relationship[:parent_name]}, #{attribute.inspect})"
+            unless model_name == relationship[:child_name] || model_name == relationship[:parent_name]
+              join_models << model_name
+            end
           elsif attribute[:type] == :has_n
             attribute.delete(:type)
-            model.has(attribute.delete(:cardinality), attribute.delete(:name).to_sym, attribute)
+            cardinality = attribute.delete(:cardinality)
+            name = attribute.delete(:name)
+            # puts "#{model}.has(#{cardinality}, #{name}, #{attribute.inspect})"
+            model.has(cardinality, name.to_sym, attribute)
           elsif attribute[:type] == :belongs_to
             attribute.delete(:type)
             other_side = attribute.delete(:other_side)
             name = attribute.delete(:name)
-#            puts "#{model.name}.belongs_to(#{name}, #{attribute.inspect})"
+            # puts "#{model.name}.belongs_to(#{name}, #{attribute.inspect})"
             model.belongs_to(name.to_sym, attribute.dup)
             unless other_side.nil?
               other_name = other_side.delete(:name)
               cardinality = other_side.delete(:cardinality)
               other_side[:model] = ActiveSupport::Inflector.singularize(model)
-#              puts "#{models[attribute[:model]]}.has(#{cardinality}, #{other_name}, #{other_side.inspect})"
+              # puts "#{models[attribute[:model]]}.has(#{cardinality}, #{other_name}, #{other_side.inspect})"
               models[attribute[:model]].has(cardinality, other_name.to_sym, other_side)
             end
           else

@@ -16,7 +16,7 @@ module DataMapper
       chainable do
         def get_type(db_type)
           
-          # return :has_one_relation if db_type.has_key?("$ref")
+          return db_type["dm_relation"].to_sym if db_type.has_key?("dm_relation") 
           
           type = db_type['type']
           format = db_type['format']
@@ -73,21 +73,32 @@ module DataMapper
             type = get_type(value)
             debugger if type.nil?
             name = key.sub("#{value['prefix']}#{value['separator']}", "")
-            attribute = { :name => name }
+            attribute = { :name => name, :type => type }
             
-            if type == :belongs_to
-              # belongs_to
-              attribute[:type] = :belongs_to
+            if type == :many_to_many
+              other_table = [table.split('/')[0..-2], value['items']['$ref']].flatten.join("/")
+              other_class = other_table.camelize
+              attribute.merge!({:prefix => value['prefix']}) if value.has_key?('prefix')
+              attribute[:relationship] = {
+                # M:M requires we wire things a bit differently and remove the join model
+                :many_to_many => true,
+                :parent_name => File.basename(table).pluralize,
+                :parent => ActiveSupport::Inflector.classify(table), 
+                :child_name => File.basename(other_table).pluralize,
+                :child => ActiveSupport::Inflector.classify(other_table), 
+                # When we can detect more from the database we can optimize this
+                :cardinality => Infinity, 
+                :bidirectional => true }      
+            elsif type == :belongs_to
               attribute[:prefix] = value['prefix'] if value.has_key?('prefix')
             elsif type == :has_n
-              attribute[:type] = :has_n
               other_table = [table.split('/')[0..-2], value['items']['$ref']].flatten.join("/")
               other_class = other_table.camelize
               attribute[:cardinality] = Infinity
               attribute[:model] = other_class  
               attribute.merge!({:prefix => value['prefix']}) if value.has_key?('prefix')
             else
-              attribute.merge!({ :type => type, :required => !value.delete('optional'), :key => value.has_key?('index') && value.delete('index') }) unless attribute[:type] == DataMapper::Types::Serial
+              attribute.merge!({ :required => !value.delete('optional'), :key => value.has_key?('index') && value.delete('index') }) unless attribute[:type] == DataMapper::Types::Serial
               ['type', 'format', 'unique', 'index', 'items'].each { |key| value.delete(key) }
               value.keys.each { |key| value[key.to_sym] = value[key]; value.delete(key) }
               attribute.merge!(value)
