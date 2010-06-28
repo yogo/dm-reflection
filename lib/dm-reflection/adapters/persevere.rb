@@ -67,13 +67,14 @@ module DataMapper
         def get_properties(table)
           attributes = Array.new
           schema = self.get_schema(table)[0]
+
           if schema.has_key?('properties')
             
           schema['properties'].each_pair do |key, value|
             type = get_type(value)
-            debugger if type.nil?
-            name = key.sub("#{value['prefix']}#{value['separator']}", "")
-            attribute = { :name => name, :type => type }
+
+            # name = key.sub("#{value['prefix']}#{value['separator']}", "")
+            attribute = { :name => key, :type => type }
             
             if type == :many_to_many
               other_table = [table.split('/')[0..-2], value['items']['$ref']].flatten.join("/")
@@ -90,6 +91,9 @@ module DataMapper
                 :cardinality => Infinity, 
                 :bidirectional => true }      
             elsif type == :belongs_to
+              other_table = [table.split('/')[0..-2], value['type']['$ref']].flatten.join("/")
+              other_class = other_table.camelize
+              attribute[:model] = other_class 
               attribute[:prefix] = value['prefix'] if value.has_key?('prefix')
             elsif type == :has_n
               other_table = [table.split('/')[0..-2], value['items']['$ref']].flatten.join("/")
@@ -98,7 +102,7 @@ module DataMapper
               attribute[:model] = other_class  
               attribute.merge!({:prefix => value['prefix']}) if value.has_key?('prefix')
             else
-              attribute.merge!({ :required => !value.delete('optional'), :key => value.has_key?('index') && value.delete('index') }) unless attribute[:type] == DataMapper::Types::Serial
+              attribute.merge!({ :field => key, :required => !value.delete('optional'), :key => value.has_key?('index') && value.delete('index') }) unless attribute[:type] == DataMapper::Types::Serial
               ['type', 'format', 'unique', 'index', 'items'].each { |key| value.delete(key) }
               value.keys.each { |key| value[key.to_sym] = value[key]; value.delete(key) }
               attribute.merge!(value)
