@@ -41,7 +41,7 @@ module DataMapper
       end
       
       def separator
-        '/'
+        '__'
       end
       
       ##
@@ -76,8 +76,10 @@ module DataMapper
             # name = key.sub("#{value['prefix']}#{value['separator']}", "")
             attribute = { :name => key, :type => type }
             
+            
             if type == :many_to_many
-              other_table = [table.split('/')[0..-2], value['items']['$ref']].flatten.join("/")
+              # other_table = [table.split(separator)[0..-2], value['items']['$ref']].flatten.join('/')
+              other_table = value['items']['$ref'].gsub('__', '/')
               other_class = other_table.camelize
               attribute.merge!({:prefix => value['prefix']}) if value.has_key?('prefix')
               attribute[:relationship] = {
@@ -91,12 +93,14 @@ module DataMapper
                 :cardinality => Infinity, 
                 :bidirectional => true }      
             elsif type == :belongs_to
-              other_table = [table.split('/')[0..-2], value['type']['$ref']].flatten.join("/")
+              # other_table = [table.split(separator)[0..-2], value['type']['$ref'].split(separator)[-1]].flatten.join('/')
+              other_table = value['type']['$ref'].gsub('__', '/')
               other_class = other_table.camelize
               attribute[:model] = other_class 
               attribute[:prefix] = value['prefix'] if value.has_key?('prefix')
             elsif type == :has_n
-              other_table = [table.split('/')[0..-2], value['items']['$ref']].flatten.join("/")
+              # other_table = [table.split(separator)[0..-2], value['items']['$ref']].flatten.join('/')
+              other_table = value['items']['$ref'].gsub('__', '/')
               other_class = other_table.camelize
               attribute[:cardinality] = Infinity
               attribute[:model] = other_class  
@@ -118,7 +122,7 @@ module DataMapper
       
       # Turns 'class_path/class' into 'ClassPath::Class
       def derive_relationship_model(input)
-        input.match(/(Class)?\/([a-z\-\/\_]+)$/)[-1].split('/').map{|i| ActiveSupport::Inflector.classify(i) }.join("::")
+        input.match(/(Class)?\/([a-z\-\/\_]+)$/)[-1].split(separator).map{|i| ActiveSupport::Inflector.classify(i) }.join("::")
       end
       
     end # module PersevereAdapter
