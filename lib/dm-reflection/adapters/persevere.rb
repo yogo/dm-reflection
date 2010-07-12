@@ -76,34 +76,29 @@ module DataMapper
             # name = key.sub("#{value['prefix']}#{value['separator']}", "")
             attribute = { :name => key, :type => type }
             
-            
             if type == :many_to_many
-              # other_table = [table.split(separator)[0..-2], value['items']['$ref']].flatten.join('/')
-              other_table = value['items']['$ref'].gsub('__', '/')
+              other_table = value['items']['$ref']
               other_class = other_table.camelize
               attribute.merge!({:prefix => value['prefix']}) if value.has_key?('prefix')
               attribute[:relationship] = {
                 # M:M requires we wire things a bit differently and remove the join model
-                :many_to_many => true,
-                :parent_name => File.basename(table).pluralize,
-                :parent => ActiveSupport::Inflector.classify(table), 
-                :child_name => File.basename(other_table).pluralize,
-                :child => ActiveSupport::Inflector.classify(other_table), 
+                :parent_name => table.split(separator)[-1].pluralize,
+                :parent_table => table,
+                :child_name => other_table.split(separator)[-1].pluralize,
+                :child_table => other_table,
                 # When we can detect more from the database we can optimize this
                 :cardinality => Infinity, 
                 :bidirectional => true }      
             elsif type == :belongs_to
               # other_table = [table.split(separator)[0..-2], value['type']['$ref'].split(separator)[-1]].flatten.join('/')
-              other_table = value['type']['$ref'].gsub('__', '/')
-              other_class = other_table.camelize
-              attribute[:model] = other_class 
+              other_class_table = value['type']['$ref']
+              attribute[:other_models_table] = other_class_table
               attribute[:prefix] = value['prefix'] if value.has_key?('prefix')
             elsif type == :has_n
               # other_table = [table.split(separator)[0..-2], value['items']['$ref']].flatten.join('/')
-              other_table = value['items']['$ref'].gsub('__', '/')
-              other_class = other_table.camelize
+              other_class_table = value['items']['$ref']
               attribute[:cardinality] = Infinity
-              attribute[:model] = other_class  
+              attribute[:other_models_table] = other_class_table
               attribute.merge!({:prefix => value['prefix']}) if value.has_key?('prefix')
             else
               attribute.merge!({ :field => key, :required => !value.delete('optional'), :key => value.has_key?('index') && value.delete('index') }) unless attribute[:type] == DataMapper::Types::Serial

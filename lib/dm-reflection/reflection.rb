@@ -13,19 +13,6 @@ module DataMapper
       models  = Hash.new
 
       adapter.get_storage_names.each do |storage_name|
-        namespace_parts = storage_name.split(separator).map do |part|
-          ActiveSupport::Inflector.classify(part)
-        end
-
-        model_name = namespace_parts.pop
-
-        namespace = if namespace_parts.any?
-          Object.make_module(namespace_parts.join('::'))
-        else
-          Object
-        end
-
-        next if namespace.const_defined?(model_name) && !overwrite
 
         anonymous_model = DataMapper::Model.new do
           class_eval <<-RUBY, __FILE__, __LINE__
@@ -40,8 +27,8 @@ module DataMapper
           end
         end
         
-        full_name = namespace_parts.length > 0 ? [namespace_parts, model_name].join('::') : model_name
-        models[full_name] = namespace.const_set(model_name, anonymous_model)
+      
+        models[storage_name] = anonymous_model
       end
 
       join_models = Array.new
@@ -52,8 +39,8 @@ module DataMapper
             attribute.delete(:type)
             attribute.delete(:name)
             relationship = attribute.delete(:relationship)
-            parent = models[relationship.delete(:parent)]
-            child = models[relationship.delete(:child)]
+            parent = models[relationship.delete(:parent_table)]
+            child = models[relationship.delete(:child_table)]
             cardinality = relationship.delete(:cardinality)
             parent.has(cardinality, relationship[:child_name].to_sym, attribute.merge({:through => DataMapper::Resource, :model => child}))
 #            puts "#{parent}.has(#{cardinality}, #{relationship[:child_name]}, #{attribute.inspect})"
@@ -66,20 +53,21 @@ module DataMapper
             attribute.delete(:type)
             cardinality = attribute.delete(:cardinality)
             name = attribute.delete(:name)
+            other_model = models[attribute.delete(:other_models_table)]
             # puts "#{model}.has(#{cardinality}, #{name}, #{attribute.inspect})"
-            model.has(cardinality, name.to_sym, attribute)
+            model.has(cardinality, name.to_sym, attribute.merge(:model => other_model))
           elsif attribute[:type] == :belongs_to
             attribute.delete(:type)
             other_side = attribute.delete(:other_side)
             name = attribute.delete(:name)
+            other_model = models[attribute.delete(:other_models_table)]
             # puts "#{model.name}.belongs_to(#{name}, #{attribute.inspect})"
-            model.belongs_to(name.to_sym, attribute.dup)
+            model.belongs_to(name.to_sym, attribute.merge(:model => other_model).dup)
             unless other_side.nil?
               other_name = other_side.delete(:name)
               cardinality = other_side.delete(:cardinality)
-              other_side[:model] = ActiveSupport::Inflector.singularize(model)
-              # puts "#{models[attribute[:model]]}.has(#{cardinality}, #{other_name}, #{other_side.inspect})"
-              models[attribute[:model]].has(cardinality, other_name.to_sym, other_side)
+              other_side[:model] = model
+              other_model.has(cardinality, other_name.to_sym, other_side)
             end
           else
             attribute.delete_if { |k,v| v.nil? }
@@ -93,7 +81,37 @@ module DataMapper
         DataMapper::Model.descendants.delete(model)
       end
 
-      models.values
+      models
+    end
+  
+    ##
+    # Assigns a ruby name to the models
+    # 
+    # @param [Hash] models_hash the resuts from .reflect
+    # 
+    # @return [Hash] the models with a name
+    def self.name_models(models_hash, overwrite = false)
+      
+      models_hash.each_pair do |model_name, anonymous_model|
+        adapter = DataMapper.repository(anonymous_model.default_repository_name).adapter
+        separator = adapter.separator
+        namespace_parts = model_name.split(separator).map do |part|
+          ActiveSupport::Inflector.classify(part)
+        end
+
+        name = namespace_parts.pop
+
+        namespace = if namespace_parts.any?
+          Object.make_module(namespace_parts.join('::'))
+        else
+          Object
+        end
+
+        next if namespace.const_defined?(name) && !overwrite
+      
+        full_name = namespace_parts.length > 0 ? [namespace_parts, name].join('::') : name
+        namespace.const_set(name, anonymous_model)
+      end
     end
   end # module Reflection
 
